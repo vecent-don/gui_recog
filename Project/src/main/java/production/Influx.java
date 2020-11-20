@@ -35,22 +35,25 @@ public class Influx {
             String parameter = args[0];
             String target = args[1];
             String changeInfo = args[2];
+            //规范路径
             target=Util.normalize(target);
             changeInfo=Util.normalize(changeInfo);
             if (!(parameter.equals("-c") || parameter.equals("-m"))){
                 System.out.println(errorList[errorType.Command.ordinal()]);
             }else{
+                //分别生成两个dotfile
                 createMethodDotFile(target);
-                createClassDotFile(target);
+                createClassDotFile();
                 if (parameter.equals("-c")){
-                    createSelectClass(target,changeInfo);
+                    createSelectClass(changeInfo);
                 }else{
-                    createSelectMethod(target,changeInfo);
+                    createSelectMethod(changeInfo);
+
                 }
             }
         }catch(Exception e){
             System.out.println(errorList[errorType.Parameter.ordinal()]);
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
     }
 
@@ -77,7 +80,7 @@ public class Influx {
             System.out.println(stats);
             System.out.println("CHACallGraph is Completed");
 
-            File file = new File(target.substring(0, target.length() - 7) + "\\data\\method-cfa.dot");
+            File file = new File( "./method-cfa.dot");
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
             BufferedWriter bufferedWriter = new BufferedWriter(writer);
@@ -115,15 +118,15 @@ public class Influx {
         return;
     }
 
-    public static void createClassDotFile(String target){
+    public static void createClassDotFile(){
         // 通过读取method.dot文件来生成class.dot
         //map的结构是object指向一个装满调用方(subjective)的hashset
         Map<String,HashSet<String>> hashMap = new HashMap<>();
         String line, objective, subjective;
-        HashSet<String> set = new HashSet<>();
+        HashSet<String> set ;
 
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(target.substring(0,target.length()-7) + "\\data\\method-cfa.dot"));
+            BufferedReader reader = new BufferedReader(new FileReader( "./method-cfa.dot"));
             while ((line = reader.readLine()) != null) {
                 if (line.equals("digraph method {") || line.equals("}")){
                     continue;
@@ -133,8 +136,7 @@ public class Influx {
                 line = line.substring(1,line.length()-1);
                 tmp = line.split(" -> ");
                 if (tmp.length != 2){
-                    System.out.println(errorList[errorType.Format.ordinal()]);
-                    break;
+                    throw new Exception(errorList[errorType.Format.ordinal()]);
                 }
                 //objective是被调用者,这里在箭头前,方便处理
                 objective = tmp[0].substring(1,tmp[0].length()-1);
@@ -163,7 +165,7 @@ public class Influx {
 
         try{
 
-            FileWriter writer = new FileWriter(new File(target.substring(0,target.length()-7) + "\\data\\class-cfa.dot"));
+            FileWriter writer = new FileWriter(new File( "./class-cfa.dot"));
             BufferedWriter bufferedWriter = new BufferedWriter(writer);
             bufferedWriter.write("digraph class {\r\n");
             Iterator iterator;
@@ -185,7 +187,7 @@ public class Influx {
         System.out.println("class-cfa.dot has been created");
     }
 
-    public static void createSelectClass(String target,String path){
+    public static void createSelectClass(String path){
 
         try{
             Map<String, HashSet<String>> changeInfo = Util.readChangeInfo(path);
@@ -198,14 +200,12 @@ public class Influx {
 
             // 读取class-cfa.dot
             BufferedReader classReader;
-            HashSet<String> tmpSet = new HashSet<>();
-
             //寻找方法如下,每一次都检查所有依赖,核查某一个依赖的callee方,是否在受影响的集合内,如果是,将caller方也加入,凡是加入集合内的
             //class均表明受到了影响,以此法完成遍历,不需要构建新图,而最大迭代次数不会超过图的深度(最长路径的长度),每一次至少会向前"感染"一层
-            boolean sth_new=false;
+            boolean sth_new;
             do{
                 sth_new=false;
-                classReader = new BufferedReader(new FileReader(target.substring(0,target.length()-7) + "\\data\\class-cfa.dot"));
+                classReader = new BufferedReader(new FileReader( "./class-cfa.dot"));
                 while ((line = classReader.readLine()) != null){
                     if (line.equals("digraph class {") || line.equals("}")){
                         continue;
@@ -228,9 +228,9 @@ public class Influx {
 
 
             // 读取method-cfa.dot
-            BufferedReader methodReader = new BufferedReader(new FileReader(target.substring(0,target.length()-7) + "\\data\\method-cfa.dot"));
+            BufferedReader methodReader = new BufferedReader(new FileReader( "./method-cfa.dot"));
             // 写selection-class.txt
-            FileWriter writer = new FileWriter(new File(target.substring(0,target.length()-7) + "\\data\\selection-class.txt"));
+            FileWriter writer = new FileWriter(new File("./selection-class.txt"));
             BufferedWriter bufferedWriter = new BufferedWriter(writer);
 
             HashSet<String> resultSet = new HashSet<>();
@@ -268,7 +268,7 @@ public class Influx {
         System.out.println("select-class.txt has been created");
     }
 
-    public static void createSelectMethod(String target,String path){
+    public static void createSelectMethod(String path){
         String line, callee_method, caller_method, tmpString;
         String[] tmp;
         //第一层的节点不得不单独记录,
@@ -288,7 +288,7 @@ public class Influx {
 
 
             // 写select-class-test.txt
-            FileWriter writer = new FileWriter(new File(target.substring(0,target.length()-7) + "\\data\\selection-method.txt"));
+            FileWriter writer = new FileWriter(new File("./selection-method.txt"));
             BufferedWriter bufferedWriter = new BufferedWriter(writer);
             HashSet<String> tmpSet ;
             String next;
@@ -301,7 +301,7 @@ public class Influx {
                 tmpSet = new HashSet<>();
                 // 读取method-CMD-cfa-test.dot
 
-                reader = new BufferedReader(new FileReader(target.substring(0,target.length()-7) + "\\data\\method-cfa.dot"));
+                reader = new BufferedReader(new FileReader( "./method-cfa.dot"));
                 while ((line = reader.readLine()) != null) {
                     if (line.equals("digraph method {") || line.equals("}")){
                         continue;

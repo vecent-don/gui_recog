@@ -38,12 +38,64 @@ public class AutoTest {
             "\\0-CMD\\data\\","\\1-ALU\\data\\","\\2-DataLog\\data\\","\\3-BinaryHeap\\data\\",
             "\\4-NextDay\\data\\","\\5-MoreTriangle\\data\\"
     };
+    static String[] test3={
+            "0\\","1\\","2\\","3\\","4\\","5\\"
+    };
     static  String[] prefix={"selection-method.txt","selection-class.txt"};
+    public static void main2(String[] args) {
+
+        for(int i=0;i< 5;i+=1) {
+            String my = args[0]+test2[i]+prefix[0];
+            String ans = args[1]+test[i]+prefix[0];
+            HashSet<String> myans = new HashSet<>();
+            HashSet<String> trueAns = new HashSet<>();
+            try {
+                String line;
+                BufferedReader bufferedReader = new BufferedReader(new FileReader(my));
+                while ((line = bufferedReader.readLine()) != null) {
+                    myans.add(line);
+                }
+                bufferedReader.close();
+                bufferedReader = new BufferedReader(new FileReader(ans));
+                while ((line = bufferedReader.readLine()) != null) {
+                    if (line.equals("")) {
+                        int a = 0;
+                    }
+                    trueAns.add(line);
+                }
+                bufferedReader.close();
+
+                Iterator iterator = myans.iterator();
+                while (iterator.hasNext()) {
+                    String tmp = (String) iterator.next();
+                    if (trueAns.contains(tmp)) {
+                        int a = 1;
+                    } else {
+                        System.out.println(i+" sth more");
+                    }
+
+                }
+                iterator = trueAns.iterator();
+                while (iterator.hasNext()) {
+                    String tmp = (String) iterator.next();
+                    if (myans.contains(tmp) || tmp.equals("")) {
+                        int a = 1;
+                    } else {
+                        System.out.println(i+ " sth lost");
+                    }
+
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+    }
     public static void main(String[] args) {
 
-        for(int i=0;i< 5;i+=2) {
-            String my = args[0]+test2[i]+prefix[0];
-            String ans = args[1]+test[i]+prefix[1];
+        for(int i=0;i<= 5;i+=1) {
+            String my = args[0]+test3[i]+prefix[0];
+            String ans = args[1]+test[i]+prefix[0];
             HashSet<String> myans = new HashSet<>();
             HashSet<String> trueAns = new HashSet<>();
             try {
